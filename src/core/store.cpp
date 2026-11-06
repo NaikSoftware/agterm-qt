@@ -710,6 +710,14 @@ void Store::setAgent(const QString &id, const QString &agent)
     }
 }
 
+void Store::setBusy(const QString &id, bool busy)
+{
+    if (auto *s = session(id); s && s->busy != busy) {
+        s->busy = busy;
+        Q_EMIT titleChanged(id); // a repaint, not a save
+    }
+}
+
 void Store::setSettings(const Settings &s)
 {
     settings = s;
