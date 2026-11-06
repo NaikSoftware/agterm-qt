@@ -55,6 +55,7 @@ public:
     // geometry shared by painting and hit-testing
     static QRect addButtonRect(const QRect &row);
     static QRect repeatButtonRect(const QRect &row);
+    static QRect closeButtonRect(const QRect &row); // a finished session's, on hover
     QModelIndex hovered() const { return m_hovered; }
     int blinkAlpha() const { return m_blinkAlpha; }
     const Settings &settings() const;
@@ -65,6 +66,7 @@ Q_SIGNALS:
     void foldersDropped(const QString &workspaceId, const QStringList &paths);
     void renameRequested(const QString &kind, const QString &id, const QString &name);
     void editFlaggedRequested(); // the empty flagged view's link
+    void closeRequested(const QString &sessionId);
 
 protected:
     void drawRow(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
@@ -88,6 +90,7 @@ private:
         int workspaceIndex = -1;
         QRect line;
     };
+    bool isCloseButton(QTreeWidgetItem *item, const QPoint &pos) const;
     Drop dropTarget(const QPoint &pos, bool workspaceDrag) const;
     QStringList structure() const;
     QStringList m_structure; // what the items were built from; an equal one is updated in place

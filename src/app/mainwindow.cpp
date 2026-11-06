@@ -343,6 +343,7 @@ MainWindow::MainWindow(Store &store, const QString &statePath)
     connect(&m_followTimer, &QTimer::timeout, this, [this] { autoFollowTick(m_idle.elapsed()); });
     m_followTimer.start();
     connect(m_tree, &Sidebar::editFlaggedRequested, this, &MainWindow::editFlaggedSessions);
+    connect(m_tree, &Sidebar::closeRequested, this, [this](const QString &id) { closeSessions({id}); });
     connect(&m_store, &Store::selectionChanged, this, [this](const QString &id) {
         if (const Session *s = m_store.session(id); s && s->status == QLatin1String("blocked"))
             m_followShown.insert(id);

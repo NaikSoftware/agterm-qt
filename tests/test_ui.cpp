@@ -667,6 +667,30 @@ private Q_SLOTS:
         QVERIFY(shown());
     }
 
+    void aFinishedSessionsCloseButtonAsksToCloseIt()
+    {
+        Store store;
+        const QString ws = store.addWorkspace("w");
+        const QString a = store.addSession(ws, "a", {}), b = store.addSession(ws, "b", {});
+        store.setStatus(a, "completed");
+        store.setStatus(b, "active");
+        Sidebar tree(store);
+        tree.resize(300, 400);
+        tree.show();
+        tree.rebuild();
+        QVERIFY(QTest::qWaitForWindowExposed(&tree));
+        QSignalSpy spy(&tree, &Sidebar::closeRequested);
+        auto click = [&](int row) {
+            QTest::mouseClick(tree.viewport(), Qt::LeftButton, {},
+                              Sidebar::closeButtonRect(tree.visualItemRect(tree.topLevelItem(0)->child(row))).center());
+        };
+        click(1); // an active session has no close button
+        QVERIFY(spy.isEmpty());
+        click(0);
+        QCOMPARE(spy.size(), 1);
+        QCOMPARE(spy.first().first().toString(), a);
+    }
+
     void editorsFlagAndMarkLive()
     {
         Store store;
