@@ -313,7 +313,14 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
     // a collapsed workspace rolls up its sessions' status and badge, as master does; an open one leaves them to its rows
     if (session || (!buttons && !index.data(Expanded).toBool())) {
         const QString status = index.data(Status).toString();
-        if (status != QLatin1String("idle")) {
+        if (session && status == QLatin1String("completed") && m_sidebar->hovered() == index) {
+            // hover-only: a finished session's glyph turns into its close button
+            const QPointF c = QRectF(Sidebar::closeButtonRect(opt.rect)).center();
+            p->setPen(QPen(dim, 1.4, Qt::SolidLine, Qt::RoundCap));
+            p->drawLine(c + QPointF(-4, -4), c + QPointF(4, 4));
+            p->drawLine(c + QPointF(-4, 4), c + QPointF(4, -4));
+            right -= 20;
+        } else if (status != QLatin1String("idle")) {
             QColor c = statusColor(m_sidebar->settings(), status);
             if (index.data(Blink).toBool())
                 c.setAlpha(m_sidebar->blinkAlpha());
@@ -434,6 +441,11 @@ const Settings &Sidebar::settings() const
 QRect Sidebar::addButtonRect(const QRect &row)
 {
     return QRect(row.right() - 34, row.center().y() - 11, 22, 22);
+}
+
+QRect Sidebar::closeButtonRect(const QRect &row)
+{
+    return QRect(row.right() - 31, row.center().y() - 11, 22, 22); // centred on the status glyph it replaces
 }
 
 QRect Sidebar::repeatButtonRect(const QRect &row)
@@ -640,6 +652,8 @@ void Sidebar::mousePressEvent(QMouseEvent *event)
         rebuild();
         return;
     }
+    if (isCloseButton(item, pos) && event->button() == Qt::LeftButton)
+        return Q_EMIT closeRequested(item->data(0, Id).toString());
     if (item && item->data(0, Kind).toInt() == WorkspaceRow && event->button() == Qt::LeftButton) {
         const QRect row = visualItemRect(item);
         const QString id = item->data(0, Id).toString();
@@ -662,6 +676,12 @@ void Sidebar::mousePressEvent(QMouseEvent *event)
     QTreeWidget::mousePressEvent(event);
 }
 
+bool Sidebar::isCloseButton(QTreeWidgetItem *item, const QPoint &pos) const
+{
+    return item && item->data(0, Kind).toInt() == SessionRow && item->data(0, Status).toString() == QLatin1String("completed")
+        && closeButtonRect(visualItemRect(item)).contains(pos);
+}
+
 QItemSelectionModel::SelectionFlags Sidebar::selectionCommand(const QModelIndex &index, const QEvent *event) const
 {
     // the shown session always stays selected: a workspace row or a Ctrl-click on it would deselect it
@@ -677,6 +697,8 @@ void Sidebar::mouseDoubleClickEvent(QMouseEvent *event)
     if (QTreeWidgetItem *item = itemAt(event->position().toPoint())) {
         if (item->data(0, Kind).toInt() == WorkspaceRow && (addButtonRect(visualItemRect(item)).contains(event->position().toPoint())
                                                          || repeatButtonRect(visualItemRect(item)).contains(event->position().toPoint())))
+            return;
+        if (isCloseButton(item, event->position().toPoint()))
             return;
         editItem(item); // inline rename, as in agterm
         return;
