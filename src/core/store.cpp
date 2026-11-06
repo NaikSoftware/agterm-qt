@@ -662,9 +662,11 @@ void Store::setTint(const QString &id, const QString &color, const QStringList &
     Tint *t = tintOf(id);
     if (!t || (!color.isEmpty() && !tintColors.contains(color)))
         return;
+    // an untinted workspace starts on icon and name, an untinted session on the icon only
+    const QStringList fresh = session(id) ? QStringList{QStringLiteral("icon")} : QStringList{QStringLiteral("icon"), QStringLiteral("name")};
     Tint next;
     if (!color.isEmpty())
-        next = {color, !tintParts(parts).isEmpty() ? tintParts(parts) : t->on.isEmpty() ? QStringList{QStringLiteral("icon")} : t->on};
+        next = {color, !tintParts(parts).isEmpty() ? tintParts(parts) : t->on.isEmpty() ? fresh : t->on};
     if (next == *t)
         return;
     *t = next;

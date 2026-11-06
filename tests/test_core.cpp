@@ -486,7 +486,7 @@ private Q_SLOTS:
         QVERIFY(!call(s, t, "workspace.new", {}, {{"tint", "pink"}})["ok"].toBool());
         QVERIFY(s.workspaces.isEmpty()); // a refused tint creates nothing
         const QString ws = call(s, t, "workspace.new", {}, {{"name", "prod"}, {"tint", "Red"}})["result"]["id"].toString();
-        QCOMPARE(s.workspace(ws)->tint, (Tint{"red", {"icon"}}));
+        QCOMPARE(s.workspace(ws)->tint, (Tint{"red", {"icon", "name"}})); // a workspace defaults to icon and name
         const QString a = s.addSession(ws, {}, {});
         QVERIFY(s.session(a)->tint.color.isEmpty()); // a workspace tint never reaches its sessions
         s.placeTint(a, {"name"});

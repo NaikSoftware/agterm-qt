@@ -43,6 +43,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QProcess>
 #include <QSet>
@@ -1426,28 +1427,70 @@ void MainWindow::syncChrome()
     overlays->setText(overlays->isEnabled() && !shown ? tr("Show Overlays") : tr("Hide Overlays"));
 }
 
+namespace {
+// triggers a clicked (or Enter-pressed) action without closing its menu
+class KeepMenuOpen : public QObject
+{
+public:
+    using QObject::QObject;
+    bool eventFilter(QObject *o, QEvent *e) override
+    {
+        auto *menu = static_cast<QMenu *>(o);
+        QAction *a = nullptr;
+        if (e->type() == QEvent::MouseButtonRelease)
+            a = menu->actionAt(static_cast<QMouseEvent *>(e)->position().toPoint());
+        else if (e->type() == QEvent::KeyPress && (static_cast<QKeyEvent *>(e)->key() == Qt::Key_Return || static_cast<QKeyEvent *>(e)->key() == Qt::Key_Enter))
+            a = menu->activeAction();
+        if (!a || !a->isEnabled() || a->isSeparator() || a->menu())
+            return false;
+        a->trigger();
+        return true;
+    }
+};
+}
+
 void MainWindow::fillTintMenu(QMenu *menu, const QStringList &ids)
 {
-    // a choice is checked only when every target shares it; the placements act only on tinted rows
-    QSet<QString> colors;
-    QSet<QStringList> placements;
-    bool allTinted = true;
-    for (const QString &id : ids) {
-        const Tint t = m_store.session(id) ? m_store.session(id)->tint : m_store.workspace(id)->tint;
-        colors << t.color;
-        placements << t.on;
-        allTinted &= !t.color.isEmpty();
-    }
-    auto add = [&](const QString &title, const QIcon &icon, bool checked, std::function<void(const QString &)> apply) {
-        auto *a = menu->addAction(icon, title, this, [ids, apply] {
+    // the menu stays open so a colour and its placement are picked in one go; refresh re-checks after each pick
+    struct Entry {
+        QAction *action;
+        std::function<bool(const QSet<QString> &, const QSet<QStringList> &, bool)> checked;
+        bool placement;
+    };
+    auto entries = std::make_shared<QList<Entry>>();
+    auto refresh = [this, ids, entries] {
+        // a choice is checked only when every target shares it; the placements act only on tinted rows
+        QSet<QString> colors;
+        QSet<QStringList> placements;
+        bool allTinted = true;
+        for (const QString &id : ids) {
+            const Session *s = m_store.session(id);
+            const Workspace *w = s ? nullptr : m_store.workspace(id);
+            if (!s && !w)
+                return; // the row closed while the menu was open
+            const Tint t = s ? s->tint : w->tint;
+            colors << t.color;
+            placements << t.on;
+            allTinted &= !t.color.isEmpty();
+        }
+        for (const Entry &e : *entries) {
+            e.action->setChecked(e.checked(colors, placements, allTinted));
+            if (e.placement)
+                e.action->setEnabled(allTinted);
+        }
+    };
+    auto add = [&](const QString &title, const QIcon &icon, bool placement, std::function<bool(const QSet<QString> &, const QSet<QStringList> &, bool)> checked,
+                   std::function<void(const QString &)> apply) {
+        auto *a = menu->addAction(icon, title, this, [ids, apply, refresh] {
             for (const QString &id : ids)
                 apply(id);
+            refresh();
         });
         a->setCheckable(true);
-        a->setChecked(checked);
-        return a;
+        entries->append({a, checked, placement});
     };
-    add(tr("None"), {}, colors == QSet<QString>{QString()}, [this](const QString &id) { m_store.setTint(id, {}); });
+    add(tr("None"), {}, false, [](const auto &colors, const auto &, bool) { return colors == QSet<QString>{QString()}; },
+        [this](const QString &id) { m_store.setTint(id, {}); });
     for (const QString &c : Store::tintColors) {
         QPixmap swatch(24, 24);
         swatch.fill(Qt::transparent);
@@ -1457,15 +1500,18 @@ void MainWindow::fillTintMenu(QMenu *menu, const QStringList &ids)
         p.setBrush(tintColor(c));
         p.drawEllipse(QRectF(2, 2, 20, 20));
         p.end();
-        add(c.left(1).toUpper() + c.mid(1), QIcon(swatch), colors == QSet<QString>{c}, [this, c](const QString &id) { m_store.setTint(id, c); });
+        add(c.left(1).toUpper() + c.mid(1), QIcon(swatch), false, [c](const auto &colors, const auto &, bool) { return colors == QSet<QString>{c}; },
+            [this, c](const QString &id) { m_store.setTint(id, c); });
     }
     menu->addSection(tr("Show On"));
     const QList<std::pair<QString, QStringList>> options{{tr("Icon"), {QStringLiteral("icon")}},
                                                         {tr("Name"), {QStringLiteral("name")}},
                                                         {tr("Icon and Name"), {QStringLiteral("icon"), QStringLiteral("name")}}};
     for (const auto &[title, parts] : options)
-        add(title, {}, allTinted && placements == QSet<QStringList>{parts}, [this, parts](const QString &id) { m_store.placeTint(id, parts); })
-            ->setEnabled(allTinted);
+        add(title, {}, true, [parts](const auto &, const auto &placements, bool allTinted) { return allTinted && placements == QSet<QStringList>{parts}; },
+            [this, parts](const QString &id) { m_store.placeTint(id, parts); });
+    menu->installEventFilter(new KeepMenuOpen(menu));
+    refresh();
 }
 
 void MainWindow::sidebarMenu(const QPoint &pos)
