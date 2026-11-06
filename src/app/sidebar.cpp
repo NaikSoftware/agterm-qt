@@ -315,7 +315,7 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
         const QString status = index.data(Status).toString();
         if (session && m_sidebar->hovered() == index && m_sidebar->closable(index)) {
             // hover-only: a finished session's glyph turns into its close button
-            const QPointF c = QRectF(Sidebar::closeButtonRect(opt.rect)).center();
+            const QPointF c(right - 6, cy); // the status glyph's own centre; QRect::center() rounds up a pixel
             p->setPen(QPen(dim, 1.4, Qt::SolidLine, Qt::RoundCap));
             p->drawLine(c + QPointF(-4, -4), c + QPointF(4, 4));
             p->drawLine(c + QPointF(-4, 4), c + QPointF(4, -4));
