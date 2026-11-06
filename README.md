@@ -1,9 +1,14 @@
 # agterm-qt
 
-A Qt/KDE port of [agterm](https://github.com/umputun/agterm) (NaikSoftware fork): a terminal organised as named
-workspaces of sessions, with a control API so coding agents and scripts can drive it and report whether they are
-working, blocked, or done. The target is feature parity with agterm `master`; [docs/PARITY.md](docs/PARITY.md)
-tracks what is ported and what is not yet.
+A terminal for Linux/KDE organised as named workspaces of sessions, with a control API so coding agents and scripts
+can drive it and report whether they are working, blocked, or done.
+
+agterm-qt is a Qt6/KDE Frameworks 6 implementation of [agterm](https://github.com/umputun/agterm) by
+[@umputun](https://github.com/umputun), a native macOS terminal. It follows agterm's model, keys (translated to Linux
+conventions), config files, agent-status hooks and `agtermctl` wire protocol, including the features of the
+[NaikSoftware/agterm](https://github.com/NaikSoftware/agterm) fork. It is an independent project: report bugs here,
+not upstream. [docs/PARITY.md](docs/PARITY.md) tracks what is ported and what is not yet (web-page overlays,
+HTML companions, `browser.*` and remote sessions are missing).
 
 Each terminal is a Konsole KPart, so Konsole's profiles, colour schemes, scrollback, search and copy/paste work as
 in Konsole.
@@ -110,3 +115,8 @@ line) on `<state dir>/agterm.sock`. The state dir is `~/.local/share/agterm-qt`,
 Beyond sessions and workspaces it streams events (`agtermctl events`), shows pickers and questions (`pick`, `ask`),
 passes messages between panes (`msg`, addressed by `AGTERM_PANE_ID`), and reads a pane's screen or scrollback
 (`session text --all`). Commands for features agterm-qt lacks answer "not supported on this platform".
+
+## Credits and license
+
+The design, the control model and the agent-status adapters come from [agterm](https://github.com/umputun/agterm)
+(MIT, © Umputun). Terminal emulation is [Konsole](https://konsole.kde.org)'s KPart. MIT licensed, see [LICENSE](LICENSE).
