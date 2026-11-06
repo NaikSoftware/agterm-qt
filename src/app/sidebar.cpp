@@ -36,12 +36,6 @@ QString statusShape(const Settings &settings, const QString &status)
     return shape.isEmpty() ? QStringLiteral("circle") : shape;
 }
 
-// a session that is not running an agent (finished or idle) can be closed from its row
-static bool closable(const QString &status)
-{
-    return status == QLatin1String("completed") || status == QLatin1String("idle");
-}
-
 void drawStatusGlyph(QPainter *p, const QPointF &c, qreal r, const QString &shape)
 {
     if (shape == QLatin1String("square")) {
@@ -319,7 +313,7 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
     // a collapsed workspace rolls up its sessions' status and badge, as master does; an open one leaves them to its rows
     if (session || (!buttons && !index.data(Expanded).toBool())) {
         const QString status = index.data(Status).toString();
-        if (session && closable(status) && m_sidebar->hovered() == index) {
+        if (session && m_sidebar->hovered() == index && m_sidebar->closable(index)) {
             // hover-only: a finished session's glyph turns into its close button
             const QPointF c = QRectF(Sidebar::closeButtonRect(opt.rect)).center();
             p->setPen(QPen(dim, 1.4, Qt::SolidLine, Qt::RoundCap));
@@ -539,6 +533,7 @@ void Sidebar::rebuild()
         item->setData(0, Agent, s.agent);
         item->setData(0, Flagged, s.flagged);
         item->setData(0, Unseen, s.unseen);
+        item->setData(0, Busy, s.busy);
         item->setData(0, TintColor, s.tint.color);
         item->setData(0, TintOn, s.tint.on);
         item->setToolTip(0, s.title.isEmpty() ? s.cwd : s.title + QLatin1Char('\n') + s.cwd);
@@ -684,8 +679,18 @@ void Sidebar::mousePressEvent(QMouseEvent *event)
 
 bool Sidebar::isCloseButton(QTreeWidgetItem *item, const QPoint &pos) const
 {
-    return item && item->data(0, Kind).toInt() == SessionRow && closable(item->data(0, Status).toString())
+    return item && item->data(0, Kind).toInt() == SessionRow && closable(indexFromItem(item))
         && closeButtonRect(visualItemRect(item)).contains(pos);
+}
+
+// the close X shows only on a quiet row: no attention mark, and no plain command running (an agent's own status speaks for it)
+bool Sidebar::closable(const QModelIndex &i) const
+{
+    const QString status = i.data(Status).toString();
+    if (status == QLatin1String("active") || status == QLatin1String("blocked") || i.data(FoldedAttention).toBool()
+        || (i.data(Unseen).toInt() > 0 && settings().notificationBadgeEnabled))
+        return false;
+    return !i.data(Agent).toString().isEmpty() || !i.data(Busy).toBool();
 }
 
 QItemSelectionModel::SelectionFlags Sidebar::selectionCommand(const QModelIndex &index, const QEvent *event) const

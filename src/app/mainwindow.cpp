@@ -1270,6 +1270,7 @@ void MainWindow::sampleAgents()
         }
         const QString agent = agentForGroup(argvs);
         m_store.setAgent(s->id, agent);
+        m_store.setBusy(s->id, fg > 0 && fg != shellPid(part));
         // a plain command names the session while it runs (an agent names itself); idle, the folder does
         const int shell = shellPid(part);
         if (fg > 0 && fg != shell && agent.isEmpty() && !argvs.isEmpty() && fg != m_titlePid.value(s->id)) {

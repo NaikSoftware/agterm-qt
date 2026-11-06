@@ -26,6 +26,7 @@ struct Session {
     bool flagged = false;
     QString title;   // last title a program running in the session set (or its command's name), spinner glyphs stripped
     QString agent;   // launcher id of the coding agent in the foreground, "" for none; not persisted
+    bool busy = false; // a program other than the shell holds the main pane's foreground; not persisted
     QString command; // run instead of a shell at creation, not persisted
     QString splitCwd, splitCommand; // the same for the split pane's first spawn, not persisted
     // one session, up to two terminals: the split pane is a second shell sharing the sidebar row
@@ -182,6 +183,7 @@ public:
     void setCwd(const QString &id, const QString &cwd);
     void setTitle(const QString &id, const QString &title);
     void setAgent(const QString &id, const QString &agent);
+    void setBusy(const QString &id, bool busy);
     void setSettings(const Settings &s);
     void keyPressed(const QString &id, Key key);
     // ⌘D / ⌘⇧D: create, transpose (other axis), or hide (same axis)

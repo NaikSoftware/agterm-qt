@@ -21,7 +21,7 @@ void drawStatusGlyph(QPainter *p, const QPointF &center, qreal radius, const QSt
 QColor tintColor(const QString &name);
 
 namespace SidebarRole {
-enum { Id = Qt::UserRole, Kind, Status, Blink, Agent, Flagged, Expanded, Unseen, Companion, HasCompanions, FoldedAttention, TintColor, TintOn, Focused, WorkspaceLabel };
+enum { Id = Qt::UserRole, Kind, Status, Blink, Agent, Flagged, Expanded, Unseen, Busy, Companion, HasCompanions, FoldedAttention, TintColor, TintOn, Focused, WorkspaceLabel };
 enum { WorkspaceRow = 1, SessionRow };
 }
 
@@ -57,6 +57,7 @@ public:
     static QRect repeatButtonRect(const QRect &row);
     static QRect closeButtonRect(const QRect &row); // a finished session's, on hover
     QModelIndex hovered() const { return m_hovered; }
+    bool closable(const QModelIndex &session) const;
     int blinkAlpha() const { return m_blinkAlpha; }
     const Settings &settings() const;
 

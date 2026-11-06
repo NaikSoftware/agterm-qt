@@ -672,9 +672,16 @@ private Q_SLOTS:
         Store store;
         const QString ws = store.addWorkspace("w");
         const QString a = store.addSession(ws, "a", {}), b = store.addSession(ws, "b", {}), c = store.addSession(ws, "c", {});
+        const QString d = store.addSession(ws, "d", {}), e = store.addSession(ws, "e", {}), f = store.addSession(ws, "f", {});
         store.setStatus(a, "completed");
         store.setStatus(b, "active");
         store.setStatus(c, "idle");
+        store.setStatus(d, "idle");
+        store.setBusy(d, true); // a plain command running
+        store.setStatus(e, "completed");
+        store.setAgent(e, "claude");
+        store.setBusy(e, true); // an agent that finished its turn
+        store.session(f)->unseen = 1; // an attention badge
         Sidebar tree(store);
         tree.resize(300, 400);
         tree.show();
@@ -693,6 +700,12 @@ private Q_SLOTS:
         click(2); // an idle session closes too
         QCOMPARE(spy.size(), 2);
         QCOMPARE(spy.last().first().toString(), c);
+        click(3); // a running command keeps its row
+        click(5); // so does an attention badge
+        QCOMPARE(spy.size(), 2);
+        click(4);
+        QCOMPARE(spy.size(), 3);
+        QCOMPARE(spy.last().first().toString(), e);
     }
 
     void editorsFlagAndMarkLive()
