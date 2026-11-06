@@ -36,6 +36,12 @@ QString statusShape(const Settings &settings, const QString &status)
     return shape.isEmpty() ? QStringLiteral("circle") : shape;
 }
 
+// a session that is not running an agent (finished or idle) can be closed from its row
+static bool closable(const QString &status)
+{
+    return status == QLatin1String("completed") || status == QLatin1String("idle");
+}
+
 void drawStatusGlyph(QPainter *p, const QPointF &c, qreal r, const QString &shape)
 {
     if (shape == QLatin1String("square")) {
@@ -313,7 +319,7 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
     // a collapsed workspace rolls up its sessions' status and badge, as master does; an open one leaves them to its rows
     if (session || (!buttons && !index.data(Expanded).toBool())) {
         const QString status = index.data(Status).toString();
-        if (session && status == QLatin1String("completed") && m_sidebar->hovered() == index) {
+        if (session && closable(status) && m_sidebar->hovered() == index) {
             // hover-only: a finished session's glyph turns into its close button
             const QPointF c = QRectF(Sidebar::closeButtonRect(opt.rect)).center();
             p->setPen(QPen(dim, 1.4, Qt::SolidLine, Qt::RoundCap));
@@ -678,7 +684,7 @@ void Sidebar::mousePressEvent(QMouseEvent *event)
 
 bool Sidebar::isCloseButton(QTreeWidgetItem *item, const QPoint &pos) const
 {
-    return item && item->data(0, Kind).toInt() == SessionRow && item->data(0, Status).toString() == QLatin1String("completed")
+    return item && item->data(0, Kind).toInt() == SessionRow && closable(item->data(0, Status).toString())
         && closeButtonRect(visualItemRect(item)).contains(pos);
 }
 

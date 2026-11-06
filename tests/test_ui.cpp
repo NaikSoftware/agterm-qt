@@ -671,9 +671,10 @@ private Q_SLOTS:
     {
         Store store;
         const QString ws = store.addWorkspace("w");
-        const QString a = store.addSession(ws, "a", {}), b = store.addSession(ws, "b", {});
+        const QString a = store.addSession(ws, "a", {}), b = store.addSession(ws, "b", {}), c = store.addSession(ws, "c", {});
         store.setStatus(a, "completed");
         store.setStatus(b, "active");
+        store.setStatus(c, "idle");
         Sidebar tree(store);
         tree.resize(300, 400);
         tree.show();
@@ -689,6 +690,9 @@ private Q_SLOTS:
         click(0);
         QCOMPARE(spy.size(), 1);
         QCOMPARE(spy.first().first().toString(), a);
+        click(2); // an idle session closes too
+        QCOMPARE(spy.size(), 2);
+        QCOMPARE(spy.last().first().toString(), c);
     }
 
     void editorsFlagAndMarkLive()
