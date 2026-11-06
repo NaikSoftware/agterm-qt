@@ -18,9 +18,9 @@ Legend: [x] done · [ ] todo · (fork) = fork-only feature, not in upstream docs
 - [x] Session name: pinned rename, else the title a running program (agent) set (agy's conversation title, which it keeps in its own store, not the terminal), else the plain command in the foreground (sampled every 2 s, cleared when it ends), else the folder (`~` for home); shell prompt titles ignored; inline rename on double-click
 - [x] Sidebar footer: new session, new workspace, flagged view (flat list)
 - [x] Sidebar footer: workspace filter
-- [x] Session context menu: Clear Status, Rename, Copy Name, Duplicate Session, Move to ▸, Flag, Close Session (batch over a multi-selection)
+- [x] Session context menu: Clear Status, Rename, Duplicate Session, Move to ▸, Flag, Close Session (batch over a multi-selection)
 - [x] Session context menu: New Companion
-- [x] Workspace context menu: New Session, Rename, Copy Name, Flag All Sessions, Delete Workspace
+- [x] Workspace context menu: New Session, Rename, Flag All Sessions, Delete Workspace
 - [x] Workspace context menu: Focus/Unfocus, Add to/Remove from Focus, Tint
 - [x] Session context menu: Tint (None, seven colours, Show On icon/name; batch), palette Tint Session items, `session|workspace tint`, `--tint` on new
 - [x] Drag to reorder sessions and workspaces; drag a session to another workspace; multi-select

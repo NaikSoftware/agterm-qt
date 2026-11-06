@@ -21,7 +21,6 @@
 #include <QAction>
 #include <QApplication>
 #include <QButtonGroup>
-#include <QClipboard>
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QComboBox>
@@ -1535,7 +1534,6 @@ void MainWindow::sidebarMenu(const QPoint &pos)
             clear->setEnabled(s->status != QLatin1String("idle"));
             menu.addSeparator();
             menu.addAction(tr("Rename"), this, [this, item] { m_tree->editItem(item); });
-            menu.addAction(tr("Copy Name"), this, [s] { QApplication::clipboard()->setText(s->displayName()); });
             menu.addAction(tr("Duplicate Session"), this, [this, id] { m_store.select(m_store.duplicateSession(id, liveCwd(id))); });
             menu.addAction(tr("New Companion"), this, [this, id] { newCompanion(id); });
             menu.addAction(tr("Duplicate as Companion"), this, [this, id] { duplicateCompanion(id); });
@@ -1560,7 +1558,6 @@ void MainWindow::sidebarMenu(const QPoint &pos)
                        [this, id, member] { m_store.focusWorkspace(id, member ? QStringLiteral("off") : QStringLiteral("add")); });
         menu.addSeparator();
         menu.addAction(tr("Rename"), this, [this, item] { m_tree->editItem(item); });
-        menu.addAction(tr("Copy Name"), this, [w] { QApplication::clipboard()->setText(w->name); });
         bool allFlagged = !w->sessions.isEmpty();
         for (const auto &s : w->sessions)
             allFlagged &= s.flagged;
