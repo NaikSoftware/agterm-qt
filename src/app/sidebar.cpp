@@ -239,6 +239,26 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
     const QColor iconColor = tint.isValid() && tintOn.contains(QLatin1String("icon")) ? tint : dim;
     const QColor nameColor = tint.isValid() && tintOn.contains(QLatin1String("name")) ? tint : text;
 
+    // "background": a light wash; a workspace's also covers its open sessions, drawn as one block
+    auto wash = [&](const QModelIndex &i) {
+        return i.data(TintOn).toStringList().contains(QLatin1String("background")) ? tintColor(i.data(TintColor).toString()) : QColor();
+    };
+    auto block = [&](QColor c, bool openTop, bool openBottom) {
+        c.setAlpha(46);
+        p->save();
+        p->setClipRect(opt.rect); // an open end runs past the row so stacked rows join seamlessly
+        p->setPen(Qt::NoPen);
+        p->setBrush(c);
+        p->drawRoundedRect(QRectF(opt.rect).adjusted(6, openTop ? -8 : 1, -6, openBottom ? 8 : -1), 6, 6);
+        p->restore();
+    };
+    if (const QColor own = wash(index); !session && own.isValid())
+        block(own, false, index.data(Expanded).toBool() && index.model()->rowCount(index) > 0);
+    else if (const QColor group = wash(index.parent()); session && group.isValid())
+        block(group, true, index.row() < index.model()->rowCount(index.parent()) - 1);
+    if (const QColor own = wash(index); session && own.isValid())
+        block(own, false, false);
+
     if (opt.state & QStyle::State_Selected) {
         QColor sel = pal.color(QPalette::Highlight);
         sel.setAlpha(m_sidebar->hasFocus() ? 110 : 80);

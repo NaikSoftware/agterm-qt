@@ -258,7 +258,7 @@ raw `events.read` reply, see reference.md). The app keeps 4096 events per run; `
 - Sidebar: `sidebar [show|hide|toggle]`, `sidebar mode tree|flagged`, `sidebar flagged-layout flat|plain|tree`,
   `sidebar expand|collapse`, `sidebar width`; `filepanel [show|hide|toggle]`, `filepanel width`.
 - Working sets: `session flag`, `workspace flag`, `workspace focus on|off|toggle|add`, `workspace filter`,
-  `session tint|workspace tint <red|orange|yellow|green|blue|purple|gray|clear> [--on icon,name]`.
+  `session tint|workspace tint <red|orange|yellow|green|blue|purple|gray|clear> [--on icon,name,background]`.
 - `surface zoom [show|hide|toggle] [--target surface:<session>:left|right]`,
   `dashboard <id[:left|:right]>… | --mru [--font-size N | --auto-size] | --close`.
 - Windows: `window new|list|select|go|close|rename|delete|resize|move|zoom|fullscreen|minimize`.

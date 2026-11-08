@@ -9,10 +9,10 @@
 
 #include <optional>
 
-// A sidebar row colour: one of Store::tintColors shown on the icon and/or the name; empty color = none.
+// A sidebar row colour: one of Store::tintColors shown on the icon, the name and/or as a background wash; empty color = none.
 struct Tint {
     QString color;
-    QStringList on; // icon, name in that order; never empty while tinted
+    QStringList on; // icon, name, background in that order; never empty while tinted
     bool operator==(const Tint &) const = default;
 };
 
@@ -52,7 +52,7 @@ struct Workspace {
     QString name;
     QString folder; // last directory one of its sessions reported; where new sessions open
     QList<Session> sessions;
-    Tint tint; // colours the workspace row only, never its sessions
+    Tint tint; // colours the workspace row; its background wash also covers its open sessions' rows and terminals
 };
 
 struct Settings {
@@ -101,7 +101,7 @@ public:
     enum class Key { Plain, Submit, Interrupt };
     static const QStringList statuses;
     static const QStringList tintColors; // red orange yellow green blue purple gray
-    static QStringList tintParts(const QStringList &raw); // ordered icon,name; empty when empty or unknown
+    static QStringList tintParts(const QStringList &raw); // ordered icon,name,background; empty when empty or unknown
 
     QList<Workspace> workspaces;
     QString selected;
@@ -177,7 +177,7 @@ public:
     void setFlag(const QString &id, bool flagged);
     bool focusWorkspace(const QString &id, const QString &mode); // on | off | toggle | add; false on another mode
     void setFilter(bool on);
-    // id names a session or a workspace. color "" clears; parts empty keep the row's placement; an untinted workspace gets icon,name, a session icon
+    // id names a session or a workspace. color "" clears; parts empty keep the row's placement; an untinted row gets background
     void setTint(const QString &id, const QString &color, const QStringList &parts = {});
     void placeTint(const QString &id, const QStringList &parts); // an untinted row stays untinted
     void setCwd(const QString &id, const QString &cwd);

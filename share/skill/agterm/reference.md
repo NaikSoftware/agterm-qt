@@ -99,7 +99,7 @@ Not in the tree: pane ids, live process details (use `session info`), per-pane s
 
 All take `--target` (workspace id, prefix, name, `active`) and `--window`.
 
-- `workspace new [--name N] [--tint COLOR [--tint-on icon,name]]`: prints the new id. The name comes only from
+- `workspace new [--name N] [--tint COLOR [--tint-on icon,name,background]]`: prints the new id. The name comes only from
   `--name`. `--tint-on` without `--tint` fails with `--tint-on requires --tint`.
 - `workspace rename <name>`: `name is required` when empty.
 - `workspace delete`: removes the workspace and its sessions.
@@ -115,14 +115,15 @@ All take `--target` (workspace id, prefix, name, `active`) and `--window`.
   Read back as the node's `focused`.
 - `workspace filter [on|off|toggle]`: applies or suspends the marked set for the window, keeping the marks.
   Prints nothing; `on` with nothing marked silently stays off, so check `result.workspaceFilter` or the tree.
-- `workspace tint <red|orange|yellow|green|blue|purple|gray|clear> [--on icon,name]`: colours the workspace row
-  only. Errors: `invalid tint: X (…)`, `invalid tint placement: X (icon,name)`,
+- `workspace tint <red|orange|yellow|green|blue|purple|gray|clear> [--on icon,name,background]`: colours the workspace row;
+  `background` (the default for a fresh tint) also washes its open sessions' rows and, very lightly, their
+  terminal. A session's own `background` wash wins over its workspace's. Errors: `invalid tint: X (…)`, `invalid tint placement: X (icon,name,background)`,
   `workspace.tint clear takes no color or placement`. Read back as `tint`/`tintOn`.
 
 ## session: lifecycle
 
 - `session new [--name N] [--cwd DIR] [--workspace W | --workspace-name N [--create-workspace]] [--command CMD]
-  [--no-select] [--tint COLOR [--tint-on icon,name]]`
+  [--no-select] [--tint COLOR [--tint-on icon,name,background]]`
   - Prints the new id and selects it unless `--no-select`.
   - `--cwd` (`~` expanded) must exist (`not a directory: DIR`). Without `--workspace`, a `--cwd` joins the
     workspace whose remembered folder is that path. Without `--cwd`, the directory follows Settings ▸ General
@@ -152,7 +153,7 @@ All take `--target` (workspace id, prefix, name, `active`) and `--window`.
   `session cwd is not an existing directory` otherwise.
 - `session collapse | expand`: folds or unfolds a parent's companions; `session has no companions` otherwise.
 - `session flag [on|off|toggle]`: the flagged-view mark; read back as `flagged`.
-- `session tint <color|clear> [--on icon,name]`: as `workspace tint`, for the session row.
+- `session tint <color|clear> [--on icon,name,background]`: as `workspace tint`, for the session row.
 - `session context <text> | --clear`: a short line in the title bar. Exactly one of text or `--clear`
   (`provide exactly one of a TEXT or --clear`). Trimmed, at most 256 UTF-8 bytes, no control characters or
   line breaks; blank text is refused (`context must not be empty (use --clear to remove it)`).

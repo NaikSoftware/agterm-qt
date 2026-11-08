@@ -235,6 +235,7 @@ private:
     QLabel *m_title;
     QStackedWidget *m_stack;
     QWidget *m_empty;
+    QWidget *m_wash; // a TintWash over the terminal
     QHash<QString, QAction *> m_actions;
     struct Panes {
         QWidget *view = nullptr;          // the session's page in m_stack
