@@ -116,7 +116,7 @@ All take `--target` (workspace id, prefix, name, `active`) and `--window`.
 - `workspace filter [on|off|toggle]`: applies or suspends the marked set for the window, keeping the marks.
   Prints nothing; `on` with nothing marked silently stays off, so check `result.workspaceFilter` or the tree.
 - `workspace tint <red|orange|yellow|green|blue|purple|gray|clear> [--on icon,name,background]`: colours the workspace row;
-  `background` (the default for a fresh tint) also washes its open sessions' rows and, very lightly, their
+  `background` (a fresh tint defaults to all three) also washes its open sessions' rows and, very lightly, their
   terminal. A session's own `background` wash wins over its workspace's. Errors: `invalid tint: X (…)`, `invalid tint placement: X (icon,name,background)`,
   `workspace.tint clear takes no color or placement`. Read back as `tint`/`tintOn`.
 

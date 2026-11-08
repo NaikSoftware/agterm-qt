@@ -486,7 +486,7 @@ private Q_SLOTS:
         QVERIFY(!call(s, t, "workspace.new", {}, {{"tint", "pink"}})["ok"].toBool());
         QVERIFY(s.workspaces.isEmpty()); // a refused tint creates nothing
         const QString ws = call(s, t, "workspace.new", {}, {{"name", "prod"}, {"tint", "Red"}})["result"]["id"].toString();
-        QCOMPARE(s.workspace(ws)->tint, (Tint{"red", {"background"}})); // a fresh tint defaults to the background wash
+        QCOMPARE(s.workspace(ws)->tint, (Tint{"red", {"icon", "name", "background"}})); // a fresh tint defaults to everything
         QVERIFY(call(s, t, "workspace.tint", ws, {{"mode", "set"}, {"tint", "red"}, {"tintOn", QJsonArray{"background", "name", "icon"}}})["ok"].toBool());
         QCOMPARE(s.workspace(ws)->tint, (Tint{"red", {"icon", "name", "background"}})); // ordered
         s.placeTint(ws, {"icon", "name"});

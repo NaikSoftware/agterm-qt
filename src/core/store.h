@@ -177,7 +177,7 @@ public:
     void setFlag(const QString &id, bool flagged);
     bool focusWorkspace(const QString &id, const QString &mode); // on | off | toggle | add; false on another mode
     void setFilter(bool on);
-    // id names a session or a workspace. color "" clears; parts empty keep the row's placement; an untinted row gets background
+    // id names a session or a workspace. color "" clears; parts empty keep the row's placement; an untinted row gets icon,name,background
     void setTint(const QString &id, const QString &color, const QStringList &parts = {});
     void placeTint(const QString &id, const QStringList &parts); // an untinted row stays untinted
     void setCwd(const QString &id, const QString &cwd);

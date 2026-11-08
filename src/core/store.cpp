@@ -662,8 +662,8 @@ void Store::setTint(const QString &id, const QString &color, const QStringList &
     Tint *t = tintOf(id);
     if (!t || (!color.isEmpty() && !tintColors.contains(color)))
         return;
-    // an untinted row starts as a background wash: its row, a workspace's open sessions and the terminal
-    const QStringList fresh{QStringLiteral("background")};
+    // an untinted row starts on everything: icon, name and the background wash (its row, a workspace's open sessions, the terminal)
+    const QStringList fresh{QStringLiteral("icon"), QStringLiteral("name"), QStringLiteral("background")};
     Tint next;
     if (!color.isEmpty())
         next = {color, !tintParts(parts).isEmpty() ? tintParts(parts) : t->on.isEmpty() ? fresh : t->on};
