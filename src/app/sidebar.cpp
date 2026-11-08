@@ -252,14 +252,20 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
         p->drawRoundedRect(QRectF(opt.rect).adjusted(6, openTop ? -8 : 1, -6, openBottom ? 8 : -1), 6, 6);
         p->restore();
     };
-    if (const QColor own = wash(index); !session && own.isValid())
+    const QColor own = wash(index), group = session ? wash(index.parent()) : QColor();
+    if (!session && own.isValid())
         block(own, false, index.data(Expanded).toBool() && index.model()->rowCount(index) > 0);
-    else if (const QColor group = wash(index.parent()); session && group.isValid())
+    else if (group.isValid())
         block(group, true, index.row() < index.model()->rowCount(index.parent()) - 1);
-    if (const QColor own = wash(index); session && own.isValid())
+    if (session && own.isValid())
         block(own, false, false);
 
-    if (opt.state & QStyle::State_Selected) {
+    if (const QColor washed = own.isValid() ? own : group; washed.isValid() && (opt.state & QStyle::State_Selected)) {
+        // on a wash a highlight fill muddies the colour: outline the row in the wash's own colour instead
+        p->setPen(QPen(washed, m_sidebar->hasFocus() ? 1.6 : 1.2));
+        p->setBrush(Qt::NoBrush);
+        p->drawRoundedRect(r.adjusted(2, 1, -2, -1), 5, 5);
+    } else if (opt.state & QStyle::State_Selected) {
         QColor sel = pal.color(QPalette::Highlight);
         sel.setAlpha(m_sidebar->hasFocus() ? 110 : 80);
         p->setPen(Qt::NoPen);
