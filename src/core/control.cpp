@@ -222,7 +222,7 @@ static QString tintArgs(const QJsonObject &args, QString *color, QStringList *pa
         for (const auto &v : args.value("tintOn").toArray())
             raw << v.toString();
         if ((*parts = Store::tintParts(raw)).isEmpty())
-            return QStringLiteral("invalid tint placement: %1 (icon,name)").arg(raw.join(QLatin1Char(',')));
+            return QStringLiteral("invalid tint placement: %1 (icon,name,background)").arg(raw.join(QLatin1Char(',')));
     }
     return {};
 }

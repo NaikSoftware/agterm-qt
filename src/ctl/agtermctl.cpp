@@ -16,10 +16,10 @@ static const char *usage = R"(usage: agtermctl <command> [args] [--target T] [--
 
   tree                                  workspaces and sessions
   version
-  workspace new [--name N] [--tint COLOR [--tint-on icon,name]]
+  workspace new [--name N] [--tint COLOR [--tint-on icon,name,background]]
   workspace rename <name>               (--target: workspace id/prefix/name, default active)
-  workspace tint <color|clear> [--on icon,name]   the workspace row only
-  session tint <color|clear> [--on icon,name]     red|orange|yellow|green|blue|purple|gray
+  workspace tint <color|clear> [--on icon,name,background]   the row; background also washes its sessions
+  session tint <color|clear> [--on icon,name,background]     red|orange|yellow|green|blue|purple|gray
   workspace delete | select
   workspace go --to next|prev            the next or previous visible workspace's first session
   workspace collapse | expand
@@ -28,7 +28,7 @@ static const char *usage = R"(usage: agtermctl <command> [args] [--target T] [--
   workspace filter [on|off|toggle]      apply or suspend the marked set (off keeps it)
   session new [--name N] [--cwd DIR] [--workspace W | --workspace-name N [--create-workspace]]
               [--command CMD] [--no-select] [--parent SESSION]   (--parent makes a companion: session.companion.new)
-              [--tint COLOR [--tint-on icon,name]]
+              [--tint COLOR [--tint-on icon,name,background]]
   session close [--undoable]           with the GUI's undo grace when Settings allow it; prints (undoable)|(not undoable)
                                         --target repeats for session close and session move
   session close | select | info         (--target: session id/prefix/name, default $AGTERM_SESSION_ID, then active)

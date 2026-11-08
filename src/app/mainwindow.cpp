@@ -62,6 +62,43 @@
 #include <QVBoxLayout>
 
 // A live pane's shell runs under its daemon, behind the attach client Konsole started; Konsole sees only the client.
+// A very light wash of the shown session's background tint over the terminal, so panels tell apart by colour.
+// Not in the stack's layout: it covers the whole stack and lets every mouse event through to the terminal.
+class TintWash : public QWidget
+{
+public:
+    explicit TintWash(QWidget *over)
+        : QWidget(over)
+    {
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setFocusPolicy(Qt::NoFocus);
+        over->installEventFilter(this);
+        hide();
+    }
+    void setColor(QColor c)
+    {
+        if (c.isValid())
+            c.setAlpha(7);
+        if (c != m_color)
+            update();
+        m_color = c;
+        setVisible(c.isValid());
+        raise(); // above a page the stack just added or showed
+    }
+
+protected:
+    bool eventFilter(QObject *, QEvent *e) override
+    {
+        if (e->type() == QEvent::Resize)
+            setGeometry(parentWidget()->rect());
+        return false;
+    }
+    void paintEvent(QPaintEvent *) override { QPainter(this).fillRect(rect(), m_color); }
+
+private:
+    QColor m_color;
+};
+
 static int shellPid(KParts::ReadOnlyPart *part)
 {
     auto *t = qobject_cast<TerminalInterface *>(part);
@@ -185,6 +222,7 @@ MainWindow::MainWindow(Store &store, const QString &statePath)
     m_stack = new QStackedWidget;
     m_empty = new QWidget;
     m_stack->addWidget(m_empty);
+    m_wash = new TintWash(m_stack);
 
     m_split = new QSplitter;
     m_split->setChildrenCollapsible(false);
@@ -1158,6 +1196,13 @@ void MainWindow::showSelected()
     const Session *s = m_store.session(m_store.selected);
     const Panes p = m_panes.value(m_store.selected);
     m_stack->setCurrentWidget(p.view ? p.view : m_empty);
+    {
+        // the session's own wash, else its workspace's
+        const Workspace *w = s ? m_store.workspaceOf(s->id) : nullptr;
+        auto wash = [](const Tint &t) { return t.on.contains(QLatin1String("background")) ? tintColor(t.color) : QColor(); };
+        const QColor own = s ? wash(s->tint) : QColor();
+        static_cast<TintWash *>(m_wash)->setColor(own.isValid() ? own : w ? wash(w->tint) : QColor());
+    }
     // focus moves only with the selection, so a status repaint never pulls it out of the split pane
     if (p.view && m_shownId != m_store.selected && isActiveWindow() && !m_tree->editing()) {
         KParts::ReadOnlyPart *front = coverPart(m_store.selected);
@@ -1507,7 +1552,9 @@ void MainWindow::fillTintMenu(QMenu *menu, const QStringList &ids)
     menu->addSection(tr("Show On"));
     const QList<std::pair<QString, QStringList>> options{{tr("Icon"), {QStringLiteral("icon")}},
                                                         {tr("Name"), {QStringLiteral("name")}},
-                                                        {tr("Icon and Name"), {QStringLiteral("icon"), QStringLiteral("name")}}};
+                                                        {tr("Icon and Name"), {QStringLiteral("icon"), QStringLiteral("name")}},
+                                                        {tr("Background"), {QStringLiteral("background")}},
+                                                        {tr("Everything"), {QStringLiteral("icon"), QStringLiteral("name"), QStringLiteral("background")}}};
     for (const auto &[title, parts] : options)
         add(title, {}, true, [parts](const auto &, const auto &placements, bool allTinted) { return allTinted && placements == QSet<QStringList>{parts}; },
             [this, parts](const QString &id) { m_store.placeTint(id, parts); });

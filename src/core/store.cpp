@@ -20,12 +20,12 @@ QStringList Store::tintParts(const QStringList &raw)
     QStringList parts;
     for (const QString &p : raw) {
         const QString part = p.trimmed().toLower();
-        if (part != QLatin1String("icon") && part != QLatin1String("name"))
+        if (part != QLatin1String("icon") && part != QLatin1String("name") && part != QLatin1String("background"))
             return {};
         parts << part;
     }
     QStringList ordered;
-    for (const char *p : {"icon", "name"})
+    for (const char *p : {"icon", "name", "background"})
         if (parts.contains(QLatin1String(p)))
             ordered << QLatin1String(p);
     return ordered;
@@ -662,8 +662,8 @@ void Store::setTint(const QString &id, const QString &color, const QStringList &
     Tint *t = tintOf(id);
     if (!t || (!color.isEmpty() && !tintColors.contains(color)))
         return;
-    // an untinted workspace starts on icon and name, an untinted session on the icon only
-    const QStringList fresh = session(id) ? QStringList{QStringLiteral("icon")} : QStringList{QStringLiteral("icon"), QStringLiteral("name")};
+    // an untinted row starts on everything: icon, name and the background wash (its row, a workspace's open sessions, the terminal)
+    const QStringList fresh{QStringLiteral("icon"), QStringLiteral("name"), QStringLiteral("background")};
     Tint next;
     if (!color.isEmpty())
         next = {color, !tintParts(parts).isEmpty() ? tintParts(parts) : t->on.isEmpty() ? fresh : t->on};

@@ -67,6 +67,7 @@ bool MainWindow::openDashboard(const QStringList &cells, const QString &fontMode
     m_dashHighlight = 0;
     m_stack->addWidget(m_dashboard);
     m_stack->setCurrentWidget(m_dashboard);
+    m_wash->hide(); // the grid holds many sessions
     m_dashboard->setFocus();
     setWindowTitle(tr("Dashboard"));
     m_dashBlink.start();
