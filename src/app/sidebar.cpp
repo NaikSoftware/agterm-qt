@@ -244,7 +244,7 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
         return i.data(TintOn).toStringList().contains(QLatin1String("background")) ? tintColor(i.data(TintColor).toString()) : QColor();
     };
     auto block = [&](QColor c, bool openTop, bool openBottom) {
-        c.setAlpha(46);
+        c.setAlpha(22);
         p->save();
         p->setClipRect(opt.rect); // an open end runs past the row so stacked rows join seamlessly
         p->setPen(Qt::NoPen);

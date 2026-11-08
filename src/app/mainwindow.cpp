@@ -78,7 +78,7 @@ public:
     void setColor(QColor c)
     {
         if (c.isValid())
-            c.setAlpha(14);
+            c.setAlpha(7);
         if (c != m_color)
             update();
         m_color = c;
