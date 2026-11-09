@@ -59,6 +59,7 @@ public:
     QModelIndex hovered() const { return m_hovered; }
     bool closable(const QModelIndex &session) const;
     int blinkAlpha() const { return m_blinkAlpha; }
+    qreal auroraPhase() const { return m_auroraPhase; } // 0..1 through an active row's colour drift
     const Settings &settings() const;
 
 Q_SIGNALS:
@@ -102,4 +103,5 @@ private:
     QTimer m_blinkTimer;
     int m_blinkAlpha = 255;
     int m_blinkPhase = 0;
+    qreal m_auroraPhase = 0;
 };

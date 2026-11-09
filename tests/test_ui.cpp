@@ -480,6 +480,23 @@ private Q_SLOTS:
         QCOMPARE(tree->blinkAlpha(), 255);
     }
 
+    void anActiveRowKeepsItsAuroraDriftingWithoutABlink()
+    {
+        Store store;
+        const QString ws = store.addWorkspace("w");
+        const QString a = store.addSession(ws, {}, {});
+        store.setStatus(a, "active");
+        Sidebar tree(store);
+        tree.rebuild();
+        const qreal start = tree.auroraPhase();
+        QTRY_VERIFY(tree.auroraPhase() != start);
+        store.setStatus(a, "idle");
+        tree.rebuild();
+        const qreal stopped = tree.auroraPhase();
+        QTest::qWait(100);
+        QCOMPARE(tree.auroraPhase(), stopped);
+    }
+
     void aWorkspaceRowRollsUpTheMostUrgentStatus()
     {
         Store store;
