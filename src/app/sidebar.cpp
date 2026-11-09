@@ -3,6 +3,7 @@
 #include "store.h"
 
 #include <QApplication>
+#include <QLinearGradient>
 #include <QDrag>
 #include <QDragEnterEvent>
 #include <QFileInfo>
@@ -279,6 +280,23 @@ void SidebarDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const 
         p->drawRoundedRect(r, 6, 6);
     }
 
+    if (session && index.data(Status).toString() == QLatin1String("active")) {
+        // in progress: the row's tint (else the active colour) drifts across it with a second hue, one period every two row widths
+        const QColor active = statusColor(m_sidebar->settings(), QStringLiteral("active"));
+        const QColor base = tint.isValid() ? tint : active, second = tint.isValid() ? active : pal.color(QPalette::Highlight);
+        auto alpha = [](QColor c, int a) { return c.setAlpha(a), c; };
+        const qreal period = 2 * r.width(), x0 = r.left() - m_sidebar->auroraPhase() * period;
+        QLinearGradient g(x0, 0, x0 + period, 0);
+        g.setSpread(QGradient::RepeatSpread);
+        g.setColorAt(0, alpha(base, 10));
+        g.setColorAt(0.25, alpha(base, 51));
+        g.setColorAt(0.55, alpha(second, 41));
+        g.setColorAt(1, alpha(base, 10));
+        p->setPen(Qt::NoPen);
+        p->setBrush(g);
+        p->drawRoundedRect(r, 6, 6);
+    }
+
     qreal x = r.left() + 6;
     const qreal cy = r.center().y();
     if (!session) {
@@ -450,6 +468,7 @@ Sidebar::Sidebar(Store &store, QWidget *parent)
         // master's glyph: opacity 1.0 -> 0.2 over 0.5 s, autoreversed (a 1 s cycle)
         m_blinkPhase = (m_blinkPhase + 1) % 30;
         m_blinkAlpha = 51 + int(204 * (0.5 + 0.5 * qCos(m_blinkPhase * M_PI / 15)));
+        m_auroraPhase = std::fmod(m_auroraPhase + 33.0 / 4800, 1.0); // a 4.8 s drift
         viewport()->update();
     });
 }
@@ -549,7 +568,7 @@ void Sidebar::rebuild()
     }
     int top = 0;
     auto topItem = [&] { return reuse ? topLevelItem(top++) : new QTreeWidgetItem(this); };
-    bool blinking = false;
+    bool animating = false; // a blinking glyph or an active row's aurora
     auto sessionItem = [&](QTreeWidgetItem *item, const ::Session &s) {
         item->setText(0, s.displayName());
         item->setData(0, Id, s.id);
@@ -564,7 +583,7 @@ void Sidebar::rebuild()
         item->setData(0, TintOn, s.tint.on);
         item->setToolTip(0, s.title.isEmpty() ? s.cwd : s.title + QLatin1Char('\n') + s.cwd);
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsDragEnabled);
-        blinking |= s.blink;
+        animating |= s.blink || s.status == QLatin1String("active");
         if (s.id == m_store.selected)
             setCurrentItem(item, 0, QItemSelectionModel::NoUpdate);
         item->setSelected(s.id == m_store.selected || keepSelected.contains(s.id));
@@ -631,7 +650,7 @@ void Sidebar::rebuild()
     }
     viewport()->update();
     // start() on a running timer restarts it, so rebuilds faster than the interval would freeze the fade
-    if (!blinking)
+    if (!animating)
         m_blinkTimer.stop(), m_blinkAlpha = 255;
     else if (!m_blinkTimer.isActive())
         m_blinkTimer.start();
