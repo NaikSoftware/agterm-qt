@@ -29,6 +29,7 @@ namespace KParts { class ReadOnlyPart; }
 
 QWidget *terminalDisplay(KParts::ReadOnlyPart *part); // the part's Konsole::TerminalDisplay
 void zoomFontTo(QWidget *display, double points);
+Qt::KeyboardModifiers linkClickModifiers(Qt::KeyboardModifiers modifiers, bool tracking, bool release);
 
 class MainWindow : public QMainWindow, public Terminals
 {

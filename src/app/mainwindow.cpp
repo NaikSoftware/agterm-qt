@@ -3,6 +3,7 @@
 #include "filepanel.h"
 #include "help.h"
 #include "hooks.h"
+#include "konsoleprivate.h"
 #include "launcher.h"
 #include "library.h"
 #include "livehost.h"
@@ -130,6 +131,16 @@ QWidget *terminalDisplay(KParts::ReadOnlyPart *part)
             if (w->inherits("Konsole::TerminalDisplay"))
                 return w;
     return nullptr;
+}
+
+// Konsole opens a link on a Ctrl+click release, but also reports that click to a program tracking the mouse, which may
+// open the link too. There, Shift keeps a Ctrl+click from the program, so Konsole opens it once; at a prompt a plain click opens it.
+// shortcut: a profile with UnderlineFilesEnabled makes a plain click open files too, like Konsole's own direct-click option
+Qt::KeyboardModifiers linkClickModifiers(Qt::KeyboardModifiers modifiers, bool tracking, bool release)
+{
+    if (tracking)
+        return modifiers == Qt::ControlModifier ? modifiers | Qt::ShiftModifier : modifiers;
+    return release && modifiers == Qt::NoModifier ? Qt::ControlModifier : modifiers;
 }
 
 // The part exposes no font API and its zoom actions live only in Konsole's main window, so this drives
@@ -1722,6 +1733,13 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     }
     if (dashboardEvent(watched, event))
         return true;
+    if ((event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease) && watched->inherits("Konsole::TerminalDisplay")) {
+        auto *mouse = static_cast<QMouseEvent *>(event);
+        bool ok = false;
+        const bool tracking = KonsolePrivate::usesMouseTracking(static_cast<QWidget *>(watched), &ok);
+        if (ok && mouse->button() == Qt::LeftButton)
+            mouse->setModifiers(linkClickModifiers(mouse->modifiers(), tracking, event->type() == QEvent::MouseButtonRelease));
+    }
     if (event->type() == QEvent::FocusIn && watched->isWidgetType())
         for (auto it = m_panes.begin(); it != m_panes.end(); ++it)
             if (it->right && it->main) {

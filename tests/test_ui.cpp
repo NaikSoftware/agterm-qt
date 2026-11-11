@@ -94,6 +94,21 @@ private Q_SLOTS:
         qApp->removeEventFilter(&filter);
     }
 
+    void linkClicksOpenOnce()
+    {
+        const auto ctrl = Qt::ControlModifier, shift = Qt::ShiftModifier, none = Qt::NoModifier;
+        // at a prompt a plain click opens the link on release; the press stays plain so selection is unchanged
+        QCOMPARE(linkClickModifiers(none, false, true), ctrl);
+        QCOMPARE(linkClickModifiers(none, false, false), none);
+        QCOMPARE(linkClickModifiers(ctrl, false, true), ctrl);
+        QCOMPARE(linkClickModifiers(shift, false, true), shift);
+        // a program tracking the mouse never sees a Ctrl+click, so only Konsole opens the link; other clicks stay its own
+        QCOMPARE(linkClickModifiers(ctrl, true, false), ctrl | shift);
+        QCOMPARE(linkClickModifiers(ctrl, true, true), ctrl | shift);
+        QCOMPARE(linkClickModifiers(none, true, true), none);
+        QCOMPARE(linkClickModifiers(ctrl | Qt::AltModifier, true, true), ctrl | Qt::AltModifier);
+    }
+
     // the config dir follows AGTERM_STATE_DIR (set by ctest), so nothing here touches ~/.config
     static QString writeConfig(const QString &name, const QString &text)
     {
