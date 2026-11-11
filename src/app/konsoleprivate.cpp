@@ -82,4 +82,11 @@ QString selectedText(QObject *session)
     return w && text ? text(w, 0x2 | 0x8) /* PreserveLineBreaks | TrimTrailingWhitespace */ : QString();
 }
 
+bool usesMouseTracking(QWidget *display, bool *ok)
+{
+    auto get = fn<bool (*)(const QObject *)>(display, "_ZNK7Konsole15TerminalDisplay17usesMouseTrackingEv");
+    *ok = get && display->inherits("Konsole::TerminalDisplay");
+    return *ok && get(display);
+}
+
 }
