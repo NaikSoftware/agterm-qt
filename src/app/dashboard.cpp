@@ -1,5 +1,6 @@
 // The dashboard: up to nine live panes re-hosted in a view-only grid.
 #include "mainwindow.h"
+#include "filepanel.h"
 #include "sidebar.h"
 #include "store.h"
 
@@ -68,6 +69,9 @@ bool MainWindow::openDashboard(const QStringList &cells, const QString &fontMode
     m_stack->addWidget(m_dashboard);
     m_stack->setCurrentWidget(m_dashboard);
     m_wash->hide(); // the grid holds many sessions
+    m_sidebarPanel->hide(); // the grid takes the whole window; closing brings both panels back
+    m_dashHidFiles = !m_filePanel->isHidden();
+    m_filePanel->hide();
     m_dashboard->setFocus();
     setWindowTitle(tr("Dashboard"));
     m_dashBlink.start();
@@ -98,6 +102,9 @@ void MainWindow::closeDashboard()
     }
     m_dashboard->deleteLater();
     m_dashboard = nullptr;
+    m_sidebarPanel->setVisible(m_sidebarAction->isChecked());
+    if (std::exchange(m_dashHidFiles, false)) // only what the grid hid; a panel shown meanwhile stays
+        m_filePanel->show(), applyFilePanelWidth();
     syncDashboardButton();
     for (const QString &id : ids)
         applyLayout(id);

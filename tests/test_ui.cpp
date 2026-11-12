@@ -387,8 +387,11 @@ private Q_SLOTS:
         QVERIFY(termA);
         QJsonObject result;
         QString error;
+        QVERIFY(w.filePanel(QStringLiteral("show"), 0, &error));
         QVERIFY2(w.appCommand("dashboard", {}, {{"cells", QJsonArray{a + ":left", b + ":left"}}, {"fontMode", "untouched"}}, &result, &error), qPrintable(error));
         QCOMPARE(w.chromeState()["dashboardMembers"].toArray().size(), 2);
+        QVERIFY(!w.chromeState()["sidebarVisible"].toBool()); // the grid takes the whole window
+        QVERIFY(!w.chromeState()["filePanel"].toObject()["visible"].toBool());
         QWidget *grid = QApplication::focusWidget();
         QVERIFY(grid && grid->isAncestorOf(termA)); // the live terminal, not a copy
         QCOMPARE(w.windowTitle(), QStringLiteral("Dashboard"));
@@ -400,6 +403,8 @@ private Q_SLOTS:
         QTest::keyClick(grid, Qt::Key_Return);
         QCOMPARE(store.selected, b);
         QVERIFY(!w.chromeState().contains("dashboardMembers"));
+        QVERIFY(w.chromeState()["sidebarVisible"].toBool()); // both panels come back
+        QVERIFY(w.chromeState()["filePanel"].toObject()["visible"].toBool());
         for (QWidget *up = termA; up; up = up->parentWidget())
             QVERIFY(up->objectName() != QLatin1String("dashCell")); // back in its own splitter
 
