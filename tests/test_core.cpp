@@ -415,10 +415,14 @@ private Q_SLOTS:
         QCOMPARE(claudeResumeLine(tmp.path(), 42), QString()); // no session file: not claude, or too old a claude
         QFile f(tmp.filePath("42.json"));
         QVERIFY(f.open(QIODevice::WriteOnly));
-        f.write(R"({"pid":42,"sessionId":"9b5503a9-4984-43de-8a91-8f8341163bef","cwd":"/x"})");
+        f.write("{\"pid\":42,\"sessionId\":\"9b5503a9-4984-43de-8a91-8f8341163bef\",\"cwd\":\"/home/me/it's here\"}");
         f.close();
         const QString line = claudeResumeLine(tmp.path(), 42);
-        QCOMPARE(line, QStringLiteral("claude --resume 9b5503a9-4984-43de-8a91-8f8341163bef"));
+        QCOMPARE(line, QStringLiteral("cd '/home/me/it'\\''s here' && claude --resume 9b5503a9-4984-43de-8a91-8f8341163bef"));
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write(R"({"sessionId":"abc"})");
+        f.close();
+        QCOMPARE(claudeResumeLine(tmp.path(), 42), QStringLiteral("claude --resume abc")); // no folder known: resume where the shell is
         QVERIFY(f.open(QIODevice::WriteOnly));
         f.write(R"({"sessionId":"x; rm -rf ~"})");
         f.close();

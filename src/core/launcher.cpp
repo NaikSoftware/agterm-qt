@@ -1,4 +1,5 @@
 #include "launcher.h"
+#include "restore.h"
 
 #include <QDir>
 #include <QFile>
@@ -116,10 +117,15 @@ QString claudeResumeLine(const QString &sessionsDir, int pid)
     QFile f(QStringLiteral("%1/%2.json").arg(sessionsDir).arg(pid));
     if (!f.open(QIODevice::ReadOnly))
         return {};
-    const QString id = QJsonDocument::fromJson(f.readAll()).object().value(QStringLiteral("sessionId")).toString();
+    const QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+    const QString id = o.value(QStringLiteral("sessionId")).toString(), cwd = o.value(QStringLiteral("cwd")).toString();
     // the id is typed into a shell: only a plain token passes
     static const QRegularExpression token(QStringLiteral("^[A-Za-z0-9_-]+$"));
-    return token.match(id).hasMatch() ? QStringLiteral("claude --resume ") + id : QString();
+    if (!token.match(id).hasMatch())
+        return {};
+    // claude finds a conversation under the folder it began in, which the shell may have left since
+    // shortcut: fish reads a backslash inside single quotes as an escape, so such a folder breaks there; quote per shell if that shows up
+    return (cwd.isEmpty() ? QString() : QStringLiteral("cd ") + Restore::shellQuoted({cwd}) + QStringLiteral(" && ")) + QStringLiteral("claude --resume ") + id;
 }
 
 QStringList availableLaunchers(const QString &path, const std::function<bool(const QString &)> &isExecutable)
