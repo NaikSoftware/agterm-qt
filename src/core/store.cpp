@@ -239,7 +239,8 @@ QString Store::addWorkspace(const QString &name)
     return w.id;
 }
 
-QString Store::addSession(const QString &workspaceId, const QString &name, const QString &cwd, const QString &command, int index)
+QString Store::addSession(const QString &workspaceId, const QString &name, const QString &cwd, const QString &command, int index,
+                          const QString &resume)
 {
     auto *w = workspace(workspaceId);
     if (!w)
@@ -249,6 +250,7 @@ QString Store::addSession(const QString &workspaceId, const QString &name, const
     s.cwd = cwd.isEmpty() ? QDir::homePath() : cwd;
     s.name = name;
     s.command = command;
+    s.resume = resume;
     if (index < 0 && settings.newSessionPlacement == QLatin1String("afterCurrent"))
         if (const int at = indexIn(*w, selected); at >= 0)
             index = at + 1;
@@ -307,7 +309,8 @@ void Store::removeSession(const QString &id)
     for (const QString &c : companionsOf(id))
         removeSession(c); // closing the parent closes the group
     const int i = indexIn(*w, id);
-    closed.prepend({w->id, w->sessions[i].name, w->sessions[i].cwd, i, w->sessions[i].id, QDateTime::currentMSecsSinceEpoch()});
+    const Session &gone = w->sessions[i];
+    closed.prepend({w->id, gone.name, gone.cwd, i, gone.id, QDateTime::currentMSecsSinceEpoch(), gone.displayName(), gone.resume});
     if (closed.size() > 20)
         closed.removeLast();
     w->sessions.removeAt(i);
@@ -421,7 +424,8 @@ void Store::finalizePending(int serial)
         for (int k = 0; k < c.workspace.sessions.size(); ++k)
             gone << Parked{c.workspace.id, k, c.workspace.sessions[k]};
         for (const Parked &p : std::as_const(gone)) {
-            closed.prepend({p.workspaceId, p.session.name, p.session.cwd, p.index, p.session.id, QDateTime::currentMSecsSinceEpoch()});
+            closed.prepend({p.workspaceId, p.session.name, p.session.cwd, p.index, p.session.id, QDateTime::currentMSecsSinceEpoch(),
+                            p.session.displayName(), p.session.resume});
             Q_EMIT sessionRemoved(p.session.id);
         }
         while (closed.size() > 20)
@@ -463,7 +467,7 @@ QString Store::reopenClosed(const QString &closedId)
     QString ws = c.workspaceId;
     if (!workspace(ws))
         ws = workspaces.isEmpty() ? addWorkspace(QStringLiteral("main")) : workspaces.first().id;
-    const QString id = addSession(ws, c.name, c.cwd, {}, c.index);
+    const QString id = addSession(ws, c.name, c.cwd, {}, c.index, c.resume);
     select(id);
     return id;
 }
@@ -865,6 +869,8 @@ QString Store::takeReplay(const QString &id, bool split, const QStringList &deny
     if (!s)
         return {};
     const QStringList argv = std::exchange(split ? s->splitReplay : s->replay, {});
+    if (!split && !s->resume.isEmpty()) // a reopened agent session: past the restore mode, its pane spawns once
+        return s->resume;
     if (restoreModeAtLaunch != QLatin1String("rerun") && restoreModeAtLaunch != QLatin1String("live")) // live: for a daemon that is gone
         return {};
     if (const auto &pin = split ? s->splitRestorePin : s->restorePin)

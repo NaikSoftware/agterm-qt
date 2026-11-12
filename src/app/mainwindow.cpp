@@ -1340,6 +1340,14 @@ void MainWindow::sampleAgents()
             m_store.setTitle(s->id, QString());
             m_commandTitle.remove(s->id);
         }
+        if (agent == QLatin1String("claude")) { // kept after claude exits: reopening the closed session resumes it
+            static const QString sessions = QDir::homePath() + QStringLiteral("/.claude/sessions");
+            for (int pid : groups.value(fg))
+                if (const QString line = claudeResumeLine(sessions, pid); !line.isEmpty()) {
+                    s->resume = line;
+                    break;
+                }
+        }
         if (agent == QLatin1String("antigravity")) { // agy sets no terminal title; its conversation title names the session
             static const QString agyData = QDir::homePath() + QStringLiteral("/.gemini/antigravity-cli");
             for (int pid : groups.value(fg))
@@ -1459,6 +1467,15 @@ void MainWindow::recentMenu()
         // the second column carries the workspace, as the switcher row's subtitle
         menu.addAction(dot, s->displayName() + QLatin1Char('\t') + m_store.workspaceOf(id)->name, this, [this, id] { m_store.select(id); });
     }
+    if (!m_store.closed.isEmpty())
+        menu.addSection(tr("Recently closed"));
+    const QColor ink = palette().color(QPalette::WindowText);
+    for (const auto &c : m_store.closed.mid(0, 15)) {
+        const Workspace *w = m_store.workspace(c.workspaceId);
+        // the agent's logo marks a session that reopens into its conversation
+        menu.addAction(c.resume.isEmpty() ? QIcon() : launcherIcon(QStringLiteral("claude"), ink),
+                       c.title + QLatin1Char('\t') + (w ? w->name : QString()), this, [this, id = c.id] { m_store.reopenClosed(id); });
+    }
     QWidget *button = qobject_cast<QToolBar *>(m_strip)->widgetForAction(m_recentAction);
     menu.exec(button ? button->mapToGlobal(QPoint(0, button->height())) : QCursor::pos());
 }
@@ -1477,7 +1494,7 @@ void MainWindow::syncChrome()
     m_actions.value(QStringLiteral("toggle_workspace_filter"))->setEnabled(!m_store.focused.isEmpty());
     m_actions.value(QStringLiteral("clear_focus"))->setEnabled(!m_store.focused.isEmpty());
     m_actions.value(QStringLiteral("undo_close"))->setEnabled(!m_store.pending.isEmpty());
-    m_recentAction->setEnabled(!m_store.recentOthers().isEmpty());
+    m_recentAction->setEnabled(!m_store.recentOthers().isEmpty() || !m_store.closed.isEmpty());
     bool shown = false;
     QAction *overlays = m_actions.value(QStringLiteral("toggle_overlay"));
     overlays->setEnabled(hasHideableOverlay(m_store.selected, &shown));

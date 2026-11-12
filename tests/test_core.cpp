@@ -409,6 +409,40 @@ private Q_SLOTS:
         QCOMPARE(antigravityTitle(fds, data), QStringLiteral("Primary Colors Identification"));
     }
 
+    void closedClaudeSessionReopensIntoItsConversation()
+    {
+        QTemporaryDir tmp;
+        QCOMPARE(claudeResumeLine(tmp.path(), 42), QString()); // no session file: not claude, or too old a claude
+        QFile f(tmp.filePath("42.json"));
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("{\"pid\":42,\"sessionId\":\"9b5503a9-4984-43de-8a91-8f8341163bef\",\"cwd\":\"/home/me/it's here\"}");
+        f.close();
+        const QString line = claudeResumeLine(tmp.path(), 42);
+        QCOMPARE(line, QStringLiteral("cd '/home/me/it'\\''s here' && claude --resume 9b5503a9-4984-43de-8a91-8f8341163bef"));
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write(R"({"sessionId":"abc"})");
+        f.close();
+        QCOMPARE(claudeResumeLine(tmp.path(), 42), QStringLiteral("claude --resume abc")); // no folder known: resume where the shell is
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write(R"({"sessionId":"x; rm -rf ~"})");
+        f.close();
+        QCOMPARE(claudeResumeLine(tmp.path(), 42), QString()); // typed into a shell: nothing but a plain token
+
+        Store s;
+        const QString ws = s.addWorkspace("w"), a = s.addSession(ws, {}, "/tmp"), b = s.addSession(ws, "plain", "/tmp");
+        s.session(a)->title = "Fix the bug";
+        s.session(a)->resume = line;
+        s.removeSession(a);
+        s.removeSession(b);
+        QCOMPARE(s.closed[1].title, QStringLiteral("Fix the bug"));
+        QCOMPARE(s.closed[1].resume, line);
+        QCOMPARE(s.closed[0].resume, QString());
+        const QString again = s.reopenClosed(s.closed[1].id);
+        QCOMPARE(s.takeReplay(again, false, {}), line); // typed whatever the restore mode
+        QCOMPARE(s.takeReplay(again, true, {}), QString());
+        QCOMPARE(s.takeReplay(s.reopenClosed(), false, {}), QString()); // a plain shell stays plain
+    }
+
     void agentDetectionAndSpinnerStripping()
     {
         QCOMPARE(agentForArgv({"/usr/bin/claude", "--resume"}), QStringLiteral("claude"));
