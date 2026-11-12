@@ -28,5 +28,8 @@ QString commandTitle(QStringList argv);
 // <dataDir>/presence/<id>.lock and keeps each conversation's title in <dataDir>/conversation_summaries.db.
 // `fdDir` is the process's /proc/<pid>/fd; "" when it is not agy or the model has not titled the conversation yet.
 QString antigravityTitle(const QString &fdDir, const QString &dataDir);
+// The line that resumes the conversation a claude process runs: Claude Code keeps <sessionsDir>/<pid>.json with
+// its sessionId (it changes on /clear and /resume). "" when there is no such file or id.
+QString claudeResumeLine(const QString &sessionsDir, int pid);
 // Terminal plus every agent whose command is an executable in one of `path`'s directories.
 QStringList availableLaunchers(const QString &path, const std::function<bool(const QString &)> &isExecutable);

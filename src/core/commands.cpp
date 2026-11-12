@@ -195,7 +195,7 @@ static QJsonObject recentCommand(Store &store, const QString &cmd, const QString
     }
     QJsonArray out;
     for (const auto &c : std::as_const(store.closed))
-        out << QJsonObject{{"id", c.id}, {"kind", "session"}, {"title", c.name.isEmpty() ? QStringLiteral("New session") : c.name}, {"subtitle", c.cwd},
+        out << QJsonObject{{"id", c.id}, {"kind", "session"}, {"title", c.title.isEmpty() ? QStringLiteral("New session") : c.title}, {"subtitle", c.cwd},
                            {"closedAt", c.closedAt / 1000.0}, {"workspaceID", c.workspaceId}, {"sessionIDs", QJsonArray{c.id}}};
     return ok({{"recent", out}});
 }

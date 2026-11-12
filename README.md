@@ -45,7 +45,7 @@ cmake --install build && kbuildsycoca6 --noincremental
   Edit Flagged Sessions… and Edit Focused Workspaces… tick rows on and off.
 - Auto-follow (Settings ▸ Agent Status) moves to the oldest blocked session once you have been idle for a chosen time.
 - Splits, terminal zoom, full screen.
-- Session (Ctrl+P) and action (Ctrl+Shift+P) palettes, a Ctrl-Tab recent-session switcher and its title-bar clock
+- Session (Ctrl+P) and action (Ctrl+Shift+P) palettes, a Ctrl-Tab recent-session switcher and its title-bar clock menu, which also reopens recently closed sessions (a Claude Code one resumes its conversation)
   button, undo of a close for 3 seconds, and reopen-closed.
 - A file panel (the session folder as a tree with file-type icons, a built-in viewer, clipboard, drag and drop).
 - Settings (Ctrl+Shift+,) with agterm's six pages; terminal font, colour scheme and cursor apply to every open

@@ -43,6 +43,9 @@ struct Session {
     // command that beats both (persisted; "" = pinned to nothing)
     QStringList foreground, splitForeground, replay, splitReplay;
     std::optional<QString> restorePin, splitRestorePin;
+    // the line that resumes the agent conversation it ran last (claude --resume <id>), not persisted; a closed
+    // session keeps it, and its reopened shell types it
+    QString resume;
 
     QString displayName() const;
 };
@@ -111,6 +114,8 @@ public:
         int index;
         QString id;          // the closed session's id, which recent.open accepts
         qint64 closedAt = 0; // ms since the epoch
+        QString title;       // its display name at close
+        QString resume;      // Session::resume, typed into the reopened shell
     };
     QList<Closed> closed; // most recent first; Reopen Closed Item brings the shell back where it was
     // a close inside its undo grace: the sessions are out of the tree, their terminals still running
@@ -145,7 +150,7 @@ public:
     QList<Session *> allSessions();
     QList<Workspace *> visibleWorkspaces();  // the marked set while the filter applies, else all
     QList<Session *> navigableSessions();    // flagged ones in the flagged view, else those of visible workspaces
-    QStringList recentOthers(int limit = 10); // the MRU sessions on screen, the current one excluded
+    QStringList recentOthers(int limit = 15); // the MRU sessions on screen, the current one excluded
     bool isSoleFocus(const QString &workspaceId) const { return focusEnabled && focused == QStringList{workspaceId}; }
 
     // target: "" or "active" -> current; else exact id, unique id prefix, or unique exact name.
@@ -156,7 +161,8 @@ public:
 
     QString addWorkspace(const QString &name);
     // index -1 follows settings.newSessionPlacement
-    QString addSession(const QString &workspaceId, const QString &name, const QString &cwd, const QString &command = {}, int index = -1);
+    QString addSession(const QString &workspaceId, const QString &name, const QString &cwd, const QString &command = {}, int index = -1,
+                       const QString &resume = {});
     QString duplicateSession(const QString &id, const QString &cwd);
     // a companion of `parentId` (a companion target means its parent), after the parent's last companion
     QString addCompanion(const QString &parentId, const QString &name, const QString &cwd, const QString &command = {});
