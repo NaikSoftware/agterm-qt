@@ -254,6 +254,7 @@ private:
     QString m_shownId;
     QHash<QString, QDateTime> m_respawned;
     bool m_zoomRestoreSidebar = true, m_zoomRestoreMenu = true;
+    bool m_dashHidFiles = false; // the dashboard hid the file panel and gives it back on close
     QHash<QString, QPointer<QObject>> m_sessions;
     QStringList m_launchers{QStringLiteral("terminal")};
     QStringList m_denylist; // restore-denylist.conf, read at launch

@@ -1684,7 +1684,7 @@ bool MainWindow::save()
                                       {"splitter", QString::fromLatin1(m_split->saveState().toBase64())},
                                       {"sidebar", m_sidebarAction->isChecked()},
                                       {"flaggedView", m_tree->flaggedView()},
-                                      {"filePanel", !m_filePanel->isHidden()},
+                                      {"filePanel", !m_filePanel->isHidden() || m_dashHidFiles},
                                       {"filePanelWidth", m_filePanelWidth},
                                       {"collapsed", collapsed}});
     QSaveFile f(m_statePath);
