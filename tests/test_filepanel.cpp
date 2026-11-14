@@ -193,6 +193,30 @@ private Q_SLOTS:
         }
     }
 
+    void textViewerGutterFitsTheLineCount()
+    {
+        QTemporaryDir tmp;
+        touch(tmp.filePath(QStringLiteral("one.txt")), "a\n");
+        touch(tmp.filePath(QStringLiteral("many.txt")), QByteArray(1000, '\n'));
+        const auto margin = [&](const QString &name, int zoom = 0) {
+            if (!FileViewer::open(tmp.filePath(name)))
+                return -1;
+            for (QWidget *w : QApplication::topLevelWidgets())
+                if (w->windowFilePath() == tmp.filePath(name)) {
+                    QPlainTextEdit *edit = w->findChild<QPlainTextEdit *>();
+                    edit->zoomIn(zoom);
+                    const int left = edit->viewport()->x() - edit->frameWidth(); // the gutter's width
+                    w->close();
+                    return left;
+                }
+            return -1;
+        };
+        const int one = margin(QStringLiteral("one.txt")), many = margin(QStringLiteral("many.txt"));
+        QVERIFY(one > 0);
+        QVERIFY(many > one); // four digits need a wider gutter than one
+        QVERIFY(margin(QStringLiteral("many.txt"), 6) > many); // Ctrl+wheel zoom widens it too
+    }
+
     void transferNeverOverwrites()
     {
         QTemporaryDir tmp;
