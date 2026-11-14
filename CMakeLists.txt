@@ -41,7 +41,8 @@ add_library(agterm-ui STATIC src/app/mainwindow.cpp src/app/config.cpp src/app/s
   resources/resources.qrc)
 target_include_directories(agterm-ui PUBLIC src/app)
 find_package(KF6Notifications REQUIRED)
-target_link_libraries(agterm-ui PUBLIC agterm-core Qt6::Widgets Qt6::DBus Qt6::Svg KF6::Parts KF6::Notifications KF6::ConfigCore KF6::WidgetsAddons ${CMAKE_DL_LIBS})
+find_package(KF6SyntaxHighlighting REQUIRED)
+target_link_libraries(agterm-ui PUBLIC agterm-core Qt6::Widgets Qt6::DBus Qt6::Svg KF6::Parts KF6::Notifications KF6::SyntaxHighlighting KF6::ConfigCore KF6::WidgetsAddons ${CMAKE_DL_LIBS})
 add_executable(agterm-qt src/app/main.cpp)
 target_link_libraries(agterm-qt PRIVATE agterm-ui Qt6::Network KF6::ConfigCore)
 

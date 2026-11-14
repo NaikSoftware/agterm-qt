@@ -1,14 +1,18 @@
 #include "fileicons.h"
 #include "filepanel.h"
 #include "filetree.h"
+#include "fileviewer.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QDir>
 #include <QFile>
 #include <QFontInfo>
 #include <QFontMetrics>
 #include <QLabel>
+#include <QPlainTextEdit>
 #include <QRegularExpression>
+#include <QSyntaxHighlighter>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTreeView>
@@ -157,6 +161,60 @@ private Q_SLOTS:
         QVERIFY(!FileTree::readText(tmp.filePath(QStringLiteral("e"))).isNull());
         QVERIFY(FileTree::readText(tmp.filePath(QStringLiteral("bin"))).isNull());
         QVERIFY(FileTree::readText(tmp.filePath(QStringLiteral("latin1"))).isNull());
+    }
+
+    void textViewerHighlightsSourceOnly()
+    {
+        QTemporaryDir tmp;
+        touch(tmp.filePath(QStringLiteral("a.py")), "def f():\n    return 1\n");
+        touch(tmp.filePath(QStringLiteral("run")), "#!/bin/sh\necho hi\n");
+        touch(tmp.filePath(QStringLiteral("notes.qqq")), "plain words\n");
+        touch(tmp.filePath(QStringLiteral("min.js")), "var a = '" + QByteArray(10000, 'x') + "';\n");
+        const auto open = [&](const QString &name) -> QPlainTextEdit * {
+            if (!FileViewer::open(tmp.filePath(name)))
+                return nullptr;
+            for (QWidget *w : QApplication::topLevelWidgets())
+                if (w->windowFilePath() == tmp.filePath(name))
+                    return w->findChild<QPlainTextEdit *>();
+            return nullptr;
+        };
+        for (const QString name : {QStringLiteral("a.py"), QStringLiteral("run")}) { // by extension, by shebang
+            QPlainTextEdit *edit = open(name);
+            QVERIFY2(edit, qPrintable(name));
+            QVERIFY2(edit->document()->findChild<QSyntaxHighlighter *>(), qPrintable(name));
+            QVERIFY2(!edit->document()->firstBlock().layout()->formats().isEmpty(), qPrintable(name));
+            edit->window()->close();
+        }
+        for (const QString name : {QStringLiteral("notes.qqq"), QStringLiteral("min.js")}) { // unknown type, a too-long line
+            QPlainTextEdit *plain = open(name);
+            QVERIFY2(plain, qPrintable(name));
+            QVERIFY2(!plain->document()->findChild<QSyntaxHighlighter *>(), qPrintable(name));
+            plain->window()->close();
+        }
+    }
+
+    void textViewerGutterFitsTheLineCount()
+    {
+        QTemporaryDir tmp;
+        touch(tmp.filePath(QStringLiteral("one.txt")), "a\n");
+        touch(tmp.filePath(QStringLiteral("many.txt")), QByteArray(1000, '\n'));
+        const auto margin = [&](const QString &name, int zoom = 0) {
+            if (!FileViewer::open(tmp.filePath(name)))
+                return -1;
+            for (QWidget *w : QApplication::topLevelWidgets())
+                if (w->windowFilePath() == tmp.filePath(name)) {
+                    QPlainTextEdit *edit = w->findChild<QPlainTextEdit *>();
+                    edit->zoomIn(zoom);
+                    const int left = edit->viewport()->x() - edit->frameWidth(); // the gutter's width
+                    w->close();
+                    return left;
+                }
+            return -1;
+        };
+        const int one = margin(QStringLiteral("one.txt")), many = margin(QStringLiteral("many.txt"));
+        QVERIFY(one > 0);
+        QVERIFY(many > one); // four digits need a wider gutter than one
+        QVERIFY(margin(QStringLiteral("many.txt"), 6) > many); // Ctrl+wheel zoom widens it too
     }
 
     void transferNeverOverwrites()
