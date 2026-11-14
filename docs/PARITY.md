@@ -71,7 +71,7 @@ Legend: [x] done · [ ] todo · (fork) = fork-only feature, not in upstream docs
 
 - [x] Column right of the sidebar with the active session's folder tree, live refresh
 - [x] Atom file-icons
-- [x] Open: Markdown, text and images in the built-in viewer; others with the default app
+- [x] Open: Markdown, text (syntax-highlighted as in Kate) and images in the built-in viewer; others with the default app
 - [x] Context menu: Open, Open with Default App, New Companion Here, Cut, Copy, Paste, Rename…, Move to Trash
 - [x] Drag inside to move (Ctrl to copy), drop from the file manager to copy in, drop on a terminal to paste the path
 - [x] `filepanel [show|hide|toggle]`, `filepanel width`

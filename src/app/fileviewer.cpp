@@ -1,15 +1,53 @@
 #include "fileviewer.h"
 #include "filetree.h"
 
+#include <KSyntaxHighlighting/Definition>
+#include <KSyntaxHighlighting/Repository>
+#include <KSyntaxHighlighting/SyntaxHighlighter>
+#include <KSyntaxHighlighting/Theme>
+
 #include <QFile>
 #include <QFileInfo>
 #include <QFontDatabase>
 #include <QLabel>
+#include <QMimeDatabase>
 #include <QPlainTextEdit>
 #include <QShortcut>
+#include <QTextBlock>
 #include <QTextBrowser>
 #include <QUrl>
 #include <QVBoxLayout>
+
+namespace {
+// Kate's highlighting: the definition by file name (or by sniffed MIME type for an extensionless script),
+// coloured with the bundled theme that fits the palette, whose background and text the editor takes too.
+void highlight(QPlainTextEdit *edit, const QString &path)
+{
+    using namespace KSyntaxHighlighting;
+    // shortcut: a big or minified file shows plain, since a whole-document highlight blocks the GUI for seconds
+    // (4 MiB of C++: +2.3 s); upgrade to highlighting only the visible blocks if those files want colour.
+    const QTextDocument *document = edit->document();
+    if (document->characterCount() > (1 << 20))
+        return;
+    for (QTextBlock block = document->begin(); block.isValid(); block = block.next())
+        if (block.length() > 10000) // Kate's own long-line limit
+            return;
+    static const auto *repository = new Repository; // never freed: a live highlighter's Definition depends on it
+    Definition definition = repository->definitionForFileName(path);
+    if (!definition.isValid())
+        definition = repository->definitionForMimeType(QMimeDatabase().mimeTypeForFile(path).name());
+    if (!definition.isValid())
+        return;
+    const Theme theme = repository->themeForPalette(edit->palette());
+    QPalette palette = edit->palette();
+    palette.setColor(QPalette::Base, QColor::fromRgba(theme.editorColor(Theme::BackgroundColor)));
+    palette.setColor(QPalette::Text, QColor::fromRgba(theme.textColor(Theme::Normal)));
+    edit->setPalette(palette);
+    auto *highlighter = new SyntaxHighlighter(edit->document());
+    highlighter->setTheme(theme);
+    highlighter->setDefinition(definition);
+}
+}
 
 bool FileViewer::open(const QString &path, QWidget *parent)
 {
@@ -39,6 +77,7 @@ bool FileViewer::open(const QString &path, QWidget *parent)
         edit->setReadOnly(true);
         edit->setLineWrapMode(QPlainTextEdit::NoWrap);
         edit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+        highlight(edit, path);
         content = edit;
         break;
     }

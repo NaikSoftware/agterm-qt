@@ -15,8 +15,8 @@ in Konsole.
 
 ## Build and install
 
-Needs Qt 6 (Widgets, Network, DBus, Svg), KDE Frameworks 6 (CoreAddons, XmlGui, Config, Notifications, KParts) and
-`konsole-kpart`. Install `wl-clipboard` (or `xclip` on X11) too: agents like Claude Code read a pasted image
+Needs Qt 6 (Widgets, Network, DBus, Svg), KDE Frameworks 6 (CoreAddons, XmlGui, Config, Notifications, KParts,
+SyntaxHighlighting) and `konsole-kpart`. Install `wl-clipboard` (or `xclip` on X11) too: agents like Claude Code read a pasted image
 (Ctrl+V) through `wl-paste`/`xclip`, and without them the paste does nothing, in agterm-qt and plain Konsole alike.
 
 ```sh
@@ -47,7 +47,8 @@ cmake --install build && kbuildsycoca6 --noincremental
 - Splits, terminal zoom, full screen.
 - Session (Ctrl+P) and action (Ctrl+Shift+P) palettes, a Ctrl-Tab recent-session switcher and its title-bar clock menu, which also reopens recently closed sessions (a Claude Code one resumes its conversation)
   button, undo of a close for 3 seconds, and reopen-closed.
-- A file panel (the session folder as a tree with file-type icons, a built-in viewer, clipboard, drag and drop).
+- A file panel (the session folder as a tree with file-type icons, a built-in viewer that highlights source code as
+  Kate does, clipboard, drag and drop).
 - Settings (Ctrl+Shift+,) with agterm's six pages; terminal font, colour scheme and cursor apply to every open
   terminal on top of the Konsole profile. View ▸ Select Theme… previews schemes live (Enter keeps, Esc reverts).
 - `keymap.conf` and `hooks.conf` in `~/.config/agterm-qt/` (or `$AGTERM_STATE_DIR/config`): rebind built-ins, add custom
