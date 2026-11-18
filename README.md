@@ -1,4 +1,6 @@
-# agterm-qt
+# agterm-qt (moved)
+
+> **This repository is archived.** The Linux app and the phone app now live in the Elis monorepo: [NaikSoftware/elis](https://github.com/NaikSoftware/elis), in `linux/` and `mobile/`, with their full history.
 
 A terminal for Linux/KDE organised as named workspaces of sessions, with a control API so coding agents and scripts
 can drive it and report whether they are working, blocked, or done.
